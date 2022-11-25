@@ -19,6 +19,7 @@ class Convert2DPolylineTo3DPolylineException(Exception):
 if __name__ == '__main__':
     polyline = arcpy.GetParameterAsText(0)
     elevation = arcpy.GetParameterAsText(1)
+    output_dir = arcpy.GetParameterAsText(2)
 
     count_polyline = int(arcpy.GetCount_management(polyline).getOutput(0))
     if count_polyline == 0:
@@ -35,7 +36,7 @@ if __name__ == '__main__':
         raise Convert2DPolylineTo3DPolylineException("Input polyline feature already has an elevation field")
 
     # get python file's current directory
-    project_dir = os.path.dirname(os.path.realpath(__file__))
+    project_dir = output_dir
 
     # set arcpy working directory
     arcpy.env.workspace = project_dir
@@ -56,7 +57,7 @@ if __name__ == '__main__':
     # create output gdb with unique name
     now = datetime.now()
     output_gdb = "Polyline_3D_" + now.strftime("%d%b%Y_%H%M%S") + ".gdb"
-    arcpy.management.CreateFileGDB(project_dir, output_gdb)
+    arcpy.management.CreateFileGDB(output_dir, output_gdb)
 
     tmp_pnt = tmp_gdb + "/tmp_pnt"
 
@@ -71,6 +72,7 @@ if __name__ == '__main__':
     tmp_txt = "tmp_txt_" + now.strftime("%d%b%Y_%H%M%S") + ".txt"
 
     arcpy.ddd.FeatureClassZToASCII(tmp_pnt_elev, project_dir, tmp_txt, "XYZ", delimiter="COMMA", decimal_separator="DECIMAL_POINT")
+
 
     arcpy.ddd.ASCII3DToFeatureClass(tmp_txt, "XYZ", output_gdb + "/polyline_3d", "POLYLINE")
 
