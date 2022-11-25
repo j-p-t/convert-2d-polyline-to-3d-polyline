@@ -17,7 +17,6 @@ class Convert2DPolylineTo3DPolylineException(Exception):
 
 # This is used to execute code if the file was run but not imported
 if __name__ == '__main__':
-    # Tool parameter accessed with GetParameter or GetParameterAsText
     polyline = arcpy.GetParameterAsText(0)
     elevation = arcpy.GetParameterAsText(1)
 
@@ -28,6 +27,10 @@ if __name__ == '__main__':
         raise Convert2DPolylineTo3DPolylineException("Input polyline feature class must contain only one record")
 
     desc = arcpy.Describe(polyline)
+    spatial_ref = arcpy.Describe(polyline).spatialReference
+
+    arcpy.env.outputCoordinateSystem = spatial_ref
+
     if desc.hasZ:
         raise Convert2DPolylineTo3DPolylineException("Input polyline feature already has an elevation field")
 
