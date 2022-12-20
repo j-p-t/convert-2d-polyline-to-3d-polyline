@@ -1,6 +1,7 @@
 import arcpy
 import os
 from datetime import datetime
+import re
 
 
 class Convert2DPolylineTo3DPolylineException(Exception):
@@ -53,7 +54,12 @@ if __name__ == '__main__':
 
     tmp_pnt = project_dir + "/" + tmp_gdb + "/tmp_pnt"
 
-    arcpy.management.GeneratePointsAlongLines(polyline, tmp_pnt, "DISTANCE", Distance="10 Meters", Include_End_Points="END_POINTS")
+    cell_x_size = arcpy.management.GetRasterProperties(elevation, "CELLSIZEX").getOutput(0)
+    cell_y_size = arcpy.management.GetRasterProperties(elevation, "CELLSIZEY").getOutput(0)
+
+    mean_cell_size = (cell_x_size + cell_y_size) / 2
+
+    arcpy.management.GeneratePointsAlongLines(polyline, tmp_pnt, "DISTANCE", Distance="{0} Meters".format(mean_cell_size), Include_End_Points="END_POINTS")
 
     arcpy.ddd.AddSurfaceInformation(tmp_pnt, elevation, "Z")
 
@@ -66,7 +72,8 @@ if __name__ == '__main__':
     arcpy.ddd.FeatureClassZToASCII(tmp_pnt_elev, project_dir, tmp_txt, "XYZ", delimiter="COMMA", decimal_separator="DECIMAL_POINT")
 
     if output_fc == "":
-        output_fc = project_dir + "/polyline_3d_" +  now_str + ".shp"
+        fc_name = re.sub(r'\W+', '_', desc.baseName) + "_3d_" + now_str + ".shp"
+        output_fc = project_dir + "/" + fc_name
 
     output_polyline_feature_3d = output_fc
     arcpy.ddd.ASCII3DToFeatureClass(tmp_txt, "XYZ", output_polyline_feature_3d, "POLYLINE")
